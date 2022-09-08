@@ -5,6 +5,7 @@
 //
 #include <random>
 #include <iostream>
+#include <map>
 
 #include "db/memtable.h"
 #include "memory/arena.h"
@@ -12,10 +13,13 @@
 #include "rocksdb/memtablerep.h"
 #include "rocksdb/utilities/options_type.h"
 #include "util/string_util.h"
+#include "ALEX/src/core/alex.h"
 
 namespace ROCKSDB_NAMESPACE {
 namespace {
 class SkipListRep : public MemTableRep {
+  alex::Alex<int, char*> index;
+  std::hash<const char*> ptr_hash;
   InlineSkipList<const MemTableRep::KeyComparator&> skip_list_;
   const MemTableRep::KeyComparator& cmp_;
   const SliceTransform* transform_;
@@ -40,43 +44,54 @@ public:
   // Insert key into the list.
   // REQUIRES: nothing that compares equal to key is currently in the list.
  void Insert(KeyHandle handle) override {
-   std::cout << "hello world";
+  //  std::cout << "Success";
    skip_list_.Insert(static_cast<char*>(handle));
  }
 
  bool InsertKey(KeyHandle handle) override {
-   std::cout << "hello world";
    return skip_list_.Insert(static_cast<char*>(handle));
  }
 
+ bool InsertKeyAlex(const char* key, const char* value) override {
+  //  skip_list_.Insert(static_cast<char*>(handle));
+   int hash = ptr_hash(key);
+   index.insert(hash, (char*)value);
+   auto iter = index.find(hash);
+   std::cout << iter.payload();
+   std::cout << "Success";
+  //  std::cout << static_cast<char*>(handle);
+  //  return index.insert(key, value);.second;
+   return true;
+ }
+
  void InsertWithHint(KeyHandle handle, void** hint) override {
-   std::cout << "hello world";
+  //  std::cout << "Success";
    skip_list_.InsertWithHint(static_cast<char*>(handle), hint);
  }
 
  bool InsertKeyWithHint(KeyHandle handle, void** hint) override {
-   std::cout << "hello world";
+  //  std::cout << "Success";
    return skip_list_.InsertWithHint(static_cast<char*>(handle), hint);
  }
 
  void InsertWithHintConcurrently(KeyHandle handle, void** hint) override {
-   std::cout << "hello world";
+   std::cout << "Success";
    skip_list_.InsertWithHintConcurrently(static_cast<char*>(handle), hint);
  }
 
  bool InsertKeyWithHintConcurrently(KeyHandle handle, void** hint) override {
-   std::cout << "hello world";
+  //  std::cout << "Success";
    return skip_list_.InsertWithHintConcurrently(static_cast<char*>(handle),
                                                 hint);
  }
 
  void InsertConcurrently(KeyHandle handle) override {
-   std::cout << "hello world";
+  //  std::cout << "Success";
    skip_list_.InsertConcurrently(static_cast<char*>(handle));
  }
 
  bool InsertKeyConcurrently(KeyHandle handle) override {
-   std::cout << "hello world";
+  //  std::cout << "Success";
    return skip_list_.InsertConcurrently(static_cast<char*>(handle));
  }
 
@@ -93,6 +108,7 @@ public:
  void Get(const LookupKey& k, void* callback_args,
           bool (*callback_func)(void* arg, const char* entry)) override {
    SkipListRep::Iterator iter(&skip_list_);
+   std::cout << "Get reached ";
    Slice dummy_slice;
    for (iter.Seek(dummy_slice, k.memtable_key().data());
         iter.Valid() && callback_func(callback_args, iter.key()); iter.Next()) {
@@ -370,7 +386,7 @@ std::string SkipListFactory::GetId() const {
 MemTableRep* SkipListFactory::CreateMemTableRep(
     const MemTableRep::KeyComparator& compare, Allocator* allocator,
     const SliceTransform* transform, Logger* /*logger*/) {
-      std::cout << "factory created";
+      // std::cout << "factory created in new file";
   return new SkipListRep(compare, allocator, transform, lookahead_);
 }
 

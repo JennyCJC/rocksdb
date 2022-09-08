@@ -11,7 +11,7 @@
 #include <vector>
 
 #include "db/merge_context.h"
-#include "memtable/skiplist.h"
+#include "memtable/testskiplist.h"
 #include "options/db_options.h"
 #include "port/port.h"
 #include "rocksdb/comparator.h"

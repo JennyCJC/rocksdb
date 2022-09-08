@@ -775,7 +775,7 @@ DEFINE_int32(checksum_type,
              ROCKSDB_NAMESPACE::BlockBasedTableOptions().checksum,
              "ChecksumType as an int");
 
-DEFINE_bool(statistics, false, "Database statistics");
+DEFINE_bool(statistics, true, "Database statistics");
 DEFINE_int32(stats_level, ROCKSDB_NAMESPACE::StatsLevel::kExceptDetailedTimers,
              "stats level for statistics");
 DEFINE_string(statistics_string, "", "Serialized statistics string");
@@ -1076,10 +1076,10 @@ DEFINE_int32(secondary_update_interval, 5,
 
 #endif  // ROCKSDB_LITE
 
-DEFINE_bool(report_bg_io_stats, false,
+DEFINE_bool(report_bg_io_stats, true,
             "Measure times spents on I/Os while in compactions. ");
 
-DEFINE_bool(use_stderr_info_logger, false,
+DEFINE_bool(use_stderr_info_logger, true,
             "Write info logs to stderr instead of to LOG file. ");
 
 #ifndef ROCKSDB_LITE
@@ -1223,7 +1223,7 @@ static ROCKSDB_NAMESPACE::Env* FLAGS_env = ROCKSDB_NAMESPACE::Env::Default();
 DEFINE_int64(stats_interval, 0, "Stats are reported every N operations when "
              "this is greater than zero. When 0 the interval grows over time.");
 
-DEFINE_int64(stats_interval_seconds, 0, "Report stats every N seconds. This "
+DEFINE_int64(stats_interval_seconds, 1, "Report stats every N seconds. This "
              "overrides stats_interval when both are > 0.");
 
 DEFINE_int32(stats_per_interval, 0, "Reports additional stats per interval when"
