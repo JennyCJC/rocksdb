@@ -53,21 +53,31 @@ int main(int argc, char **argv) {
   be = rocksdb_backup_engine_open(options, DBBackupPath, &err);
   assert(!err);
 
+  printf("reached here");
   // Put key-value
   rocksdb_writeoptions_t *writeoptions = rocksdb_writeoptions_create();
-  const char key[] = "key";
-  const char *value = "value";
+  const char key[] = "newkey";
+  const char *value = "newvalue";
   rocksdb_put(db, writeoptions, key, strlen(key), value, strlen(value) + 1,
               &err);
   assert(!err);
+
+  printf("reached here");
   // Get value
   rocksdb_readoptions_t *readoptions = rocksdb_readoptions_create();
   size_t len;
-  char *returned_value =
-      rocksdb_get(db, readoptions, key, strlen(key), &len, &err);
+  // char *returned_value =
+  //     rocksdb_get(db, readoptions, key, strlen(key), &len, &err);
+
+  printf("reached here");
   assert(!err);
-  assert(strcmp(returned_value, "value") == 0);
-  free(returned_value);
+  // assert(strcmp(returned_value, "value") == 0);
+
+  char *new_returned_value =
+      rocksdb_get(db, readoptions, key, strlen(key), &len, &err);
+  printf("return value is : ** %s **", new_returned_value);
+  // free(returned_value);
+    free(new_returned_value);
 
   // create new backup in a directory specified by DBBackupPath
   rocksdb_backup_engine_create_new_backup(be, db, &err);

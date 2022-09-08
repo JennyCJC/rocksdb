@@ -41,6 +41,7 @@
 //
 
 #pragma once
+#include <iostream>
 #include <assert.h>
 #include <stdlib.h>
 #include <algorithm>
@@ -718,6 +719,8 @@ InlineSkipList<Comparator>::AllocateSpliceOnHeap() {
 
 template <class Comparator>
 bool InlineSkipList<Comparator>::Insert(const char* key) {
+  std::cout << "inline";
+  std::cout << seq_splice_;
   return Insert<false>(key, seq_splice_, false);
 }
 

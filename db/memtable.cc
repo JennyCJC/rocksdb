@@ -584,7 +584,8 @@ Status MemTable::Add(SequenceNumber s, ValueType type,
         return Status::TryAgain("key+seq exists");
       }
     } else {
-      bool res = table->InsertKey(handle);
+      // bool res = table->InsertKey(handle);
+      bool res = table->InsertKeyAlex(key.data(), value.data());
       if (UNLIKELY(!res)) {
         return Status::TryAgain("key+seq exists");
       }
@@ -784,6 +785,7 @@ static bool SaveValue(void* arg, const char* entry) {
           merge_context->PushOperand(
               v, s->inplace_update_support == false /* operand_pinned */);
         } else if (s->value != nullptr) {
+          //replace this line
           s->value->assign(v.data(), v.size());
         }
         if (s->inplace_update_support) {
