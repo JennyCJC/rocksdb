@@ -744,7 +744,8 @@ Status MemTable::Add(SequenceNumber s, ValueType type,
         return Status::TryAgain("key+seq exists");
       }
     } else {
-      bool res = table->InsertKey(handle);
+      // bool res = table->InsertKey(handle);
+      bool res = table->InsertKeyAlex(key.data(), value.data());
       if (UNLIKELY(!res)) {
         return Status::TryAgain("key+seq exists");
       }
@@ -959,6 +960,7 @@ static bool SaveValue(void* arg, const char* entry) {
           // raw merge operands to the user
           merge_context->PushOperand(
               v, s->inplace_update_support == false /* operand_pinned */);
+<<<<<<< HEAD
         } else if (s->value) {
           if (type != kTypeWideColumnEntity) {
             assert(type == kTypeValue || type == kTypeBlobIndex);
@@ -977,6 +979,11 @@ static bool SaveValue(void* arg, const char* entry) {
           } else {
             *(s->status) = s->columns->SetWideColumnValue(v);
           }
+=======
+        } else if (s->value != nullptr) {
+          //replace this line
+          s->value->assign(v.data(), v.size());
+>>>>>>> local/main
         }
 
         if (s->inplace_update_support) {
