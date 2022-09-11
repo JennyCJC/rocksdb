@@ -20,7 +20,7 @@
 #include <thread>
 
 #include "memory/arena.h"
-#include "memtable/skiplist.h"
+#include "memtable/testskiplist.h"
 #include "monitoring/histogram.h"
 #include "port/port.h"
 #include "rocksdb/cache.h"

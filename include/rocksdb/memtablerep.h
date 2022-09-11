@@ -106,6 +106,11 @@ class MemTableRep {
     return true;
   }
 
+  virtual bool InsertKeyAlex(const char* key, const char* value) {
+    // Insert(handle);
+    return true;
+  }
+
   // Same as Insert(), but in additional pass a hint to insert location for
   // the key. If hint points to nullptr, a new hint will be populated.
   // otherwise the hint will be updated to reflect the last insert location.
