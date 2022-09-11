@@ -180,6 +180,10 @@ default_params = {
     "secondary_cache_uri":  lambda: random.choice(
         ["", "compressed_secondary_cache://capacity=8388608"]),
     "allow_data_in_errors": True,
+    "readahead_size": lambda: random.choice([0, 16384, 524288]),
+    "initial_auto_readahead_size": lambda: random.choice([0, 16384, 524288]),
+    "max_auto_readahead_size": lambda: random.choice([0, 16384, 524288]),
+    "num_file_reads_for_auto_readahead": lambda: random.choice([0, 1, 2]),
 }
 
 _TEST_DIR_ENV_VAR = 'TEST_TMPDIR'
@@ -591,7 +595,7 @@ def gen_cmd_params(args):
             params.update(multiops_wc_txn_params)
         elif args.write_policy == 'write_prepared':
             params.update(multiops_wp_txn_params)
-    if args.enable_tiered_storage:
+    if args.test_tiered_storage:
         params.update(tiered_params)
 
     # Best-effort recovery and BlobDB are currently incompatible. Test BE recovery
@@ -616,7 +620,8 @@ def gen_cmd(params, unknown_params):
         if k not in set(['test_type', 'simple', 'duration', 'interval',
                          'random_kill_odd', 'cf_consistency', 'txn',
                          'test_best_efforts_recovery', 'enable_ts',
-                         'test_multiops_txn', 'write_policy', 'stress_cmd'])
+                         'test_multiops_txn', 'write_policy', 'stress_cmd',
+                         'test_tiered_storage'])
         and v is not None] + unknown_params
     return cmd
 
@@ -840,7 +845,7 @@ def main():
     parser.add_argument("--test_multiops_txn", action='store_true')
     parser.add_argument("--write_policy", choices=["write_committed", "write_prepared"])
     parser.add_argument("--stress_cmd")
-    parser.add_argument("--enable_tiered_storage", action='store_true')
+    parser.add_argument("--test_tiered_storage", action='store_true')
 
     all_params = dict(list(default_params.items())
                       + list(blackbox_default_params.items())
@@ -852,7 +857,11 @@ def main():
                       + list(ts_params.items())
                       + list(multiops_txn_default_params.items())
                       + list(multiops_wc_txn_params.items())
-                      + list(multiops_wp_txn_params.items()))
+                      + list(multiops_wp_txn_params.items())
+                      + list(best_efforts_recovery_params.items())
+                      + list(cf_consistency_params.items())
+                      + list(tiered_params.items())
+                      + list(txn_params.items()))
 
     for k, v in all_params.items():
         parser.add_argument("--" + k, type=type(v() if callable(v) else v))
