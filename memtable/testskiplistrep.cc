@@ -13,7 +13,7 @@
 #include "rocksdb/memtablerep.h"
 #include "rocksdb/utilities/options_type.h"
 #include "util/string_util.h"
-#include "ALEX/src/core/alex.h"
+#include "../ALEX/src/core/alex.h"
 
 namespace ROCKSDB_NAMESPACE {
 namespace {
@@ -378,7 +378,7 @@ SkipListFactory::SkipListFactory(size_t lookahead) : lookahead_(lookahead) {
 std::string SkipListFactory::GetId() const {
   std::string id = Name();
   if (lookahead_ > 0) {
-    id.append(":").append(ROCKSDB_NAMESPACE::ToString(lookahead_));
+    id.append(":").append(std::to_string(lookahead_));
   }
   return id;
 }
