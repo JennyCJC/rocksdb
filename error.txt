@@ -1,0 +1,83 @@
+In file included from ./include/rocksdb/advanced_options.h:15,
+                 from ./include/rocksdb/options.h:20,
+                 from ./port/port_posix.h:16,
+                 from ./port/port.h:18,
+                 from ./util/coding.h:22,
+                 from ./db/dbformat.h:21,
+                 from ./db/memtable.h:19,
+                 from db/memtable.cc:10:
+./include/rocksdb/memtablerep.h: In member function ‘virtual bool rocksdb::MemTableRep::InsertKeyAlex(const char*, const char*)’:
+./include/rocksdb/memtablerep.h:109:42: warning: unused parameter ‘key’ [-Wunused-parameter]
+  109 |   virtual bool InsertKeyAlex(const char* key, const char* value) {
+      |                              ~~~~~~~~~~~~^~~
+./include/rocksdb/memtablerep.h:109:59: warning: unused parameter ‘value’ [-Wunused-parameter]
+  109 |   virtual bool InsertKeyAlex(const char* key, const char* value) {
+      |                                               ~~~~~~~~~~~~^~~~~
+./include/rocksdb/memtablerep.h: In member function ‘virtual std::string rocksdb::MemTableRep::GetAlex(const char*)’:
+./include/rocksdb/memtablerep.h:114:43: warning: unused parameter ‘k’ [-Wunused-parameter]
+  114 |   virtual std::string GetAlex(const char* k){
+      |                               ~~~~~~~~~~~~^
+In file included from ./include/rocksdb/advanced_options.h:15,
+                 from ./include/rocksdb/options.h:20,
+                 from ./port/port_posix.h:16,
+                 from ./port/port.h:18,
+                 from ./util/coding.h:22,
+                 from ./db/dbformat.h:21,
+                 from ./db/memtable.h:19,
+                 from memtable/testskiplistrep.cc:10:
+./include/rocksdb/memtablerep.h: In member function ‘virtual bool rocksdb::MemTableRep::InsertKeyAlex(const char*, const char*)’:
+./include/rocksdb/memtablerep.h:109:42: warning: unused parameter ‘key’ [-Wunused-parameter]
+  109 |   virtual bool InsertKeyAlex(const char* key, const char* value) {
+      |                              ~~~~~~~~~~~~^~~
+./include/rocksdb/memtablerep.h:109:59: warning: unused parameter ‘value’ [-Wunused-parameter]
+  109 |   virtual bool InsertKeyAlex(const char* key, const char* value) {
+      |                                               ~~~~~~~~~~~~^~~~~
+./include/rocksdb/memtablerep.h: In member function ‘virtual std::string rocksdb::MemTableRep::GetAlex(const char*)’:
+./include/rocksdb/memtablerep.h:114:43: warning: unused parameter ‘k’ [-Wunused-parameter]
+  114 |   virtual std::string GetAlex(const char* k){
+      |                               ~~~~~~~~~~~~^
+In file included from ./db/memtable.h:28,
+                 from db/memtable.cc:10:
+./include/rocksdb/db.h: In member function ‘virtual rocksdb::Status rocksdb::DB::Get(const rocksdb::ReadOptions&, rocksdb::ColumnFamilyHandle*, const rocksdb::Slice&, std::string*)’:
+./include/rocksdb/db.h:552:18: warning: unused variable ‘arr’ [-Wunused-variable]
+  552 |     const char * arr = temp.c_str();
+      |                  ^~~
+In file included from ./db/memtable.h:28,
+                 from memtable/testskiplistrep.cc:10:
+./include/rocksdb/db.h: In member function ‘virtual rocksdb::Status rocksdb::DB::Get(const rocksdb::ReadOptions&, rocksdb::ColumnFamilyHandle*, const rocksdb::Slice&, std::string*)’:
+./include/rocksdb/db.h:552:18: warning: unused variable ‘arr’ [-Wunused-variable]
+  552 |     const char * arr = temp.c_str();
+      |                  ^~~
+In file included from ./../ALEX/src/core/alex.h:39,
+                 from memtable/testskiplistrep.cc:16:
+./../ALEX/src/core/alex_fanout_tree.h: In lambda function:
+./../ALEX/src/core/alex_fanout_tree.h:134:75: warning: declaration of ‘b’ shadows a previous local [-Wshadow]
+  134 |                                    [key_less](auto const& a, auto const& b) {
+      |                                                                           ^
+./../ALEX/src/core/alex_fanout_tree.h:124:10: note: shadowed declaration is here
+  124 |   double b = node->model_.b_ * fanout;
+      |          ^
+./../ALEX/src/core/alex_fanout_tree.h:134:75: warning: declaration of ‘a’ shadows a previous local [-Wshadow]
+  134 |                                    [key_less](auto const& a, auto const& b) {
+      |                                                                           ^
+./../ALEX/src/core/alex_fanout_tree.h:123:10: note: shadowed declaration is here
+  123 |   double a = node->model_.a_ * fanout;
+      |          ^
+./../ALEX/src/core/alex_fanout_tree.h: In lambda function:
+./../ALEX/src/core/alex_fanout_tree.h:274:67: warning: declaration of ‘b’ shadows a previous local [-Wshadow]
+  274 |                            [key_less](auto const& a, auto const& b) {
+      |                                                                   ^
+./../ALEX/src/core/alex_fanout_tree.h:264:12: note: shadowed declaration is here
+  264 |     double b = node->model_.b_ * fanout;
+      |            ^
+./../ALEX/src/core/alex_fanout_tree.h:274:67: warning: declaration of ‘a’ shadows a previous local [-Wshadow]
+  274 |                            [key_less](auto const& a, auto const& b) {
+      |                                                                   ^
+./../ALEX/src/core/alex_fanout_tree.h:263:12: note: shadowed declaration is here
+  263 |     double a = node->model_.a_ * fanout;
+      |            ^
+memtable/testskiplistrep.cc: In member function ‘virtual std::string rocksdb::{anonymous}::SkipListRep::GetAlex(const char*)’:
+memtable/testskiplistrep.cc:108:34: warning: unused parameter ‘k’ [-Wunused-parameter]
+  108 |  std::string GetAlex(const char* k) {
+      |                      ~~~~~~~~~~~~^
+/usr/bin/ar: creating librocksdb.a

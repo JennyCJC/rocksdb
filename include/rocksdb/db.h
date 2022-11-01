@@ -16,6 +16,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <iostream>
 
 #include "rocksdb/iterator.h"
 #include "rocksdb/listener.h"
@@ -28,6 +29,8 @@
 #include "rocksdb/types.h"
 #include "rocksdb/version.h"
 #include "rocksdb/wide_columns.h"
+// #include "rocksdb/memtablerep.h"
+// #include "db/db_impl/db_impl.h"
 
 #ifdef _WIN32
 // Windows API macro interference
@@ -511,6 +514,7 @@ class DB {
   // Note: consider setting options.sync = true.
   virtual Status Write(const WriteOptions& options, WriteBatch* updates) = 0;
 
+
   // If the database contains an entry for "key" store the
   // corresponding value in *value and return OK.
   //
@@ -528,9 +532,28 @@ class DB {
     PinnableSlice pinnable_val(value);
     assert(!pinnable_val.IsPinned());
     auto s = Get(options, column_family, key, &pinnable_val);
-    if (s.ok() && pinnable_val.IsPinned()) {
-      value->assign(pinnable_val.data(), pinnable_val.size());
-    }  // else value is already assigned
+    // if (s.ok() && pinnable_val.IsPinned()) {
+    //   value->assign(pinnable_val.data(), pinnable_val.size());
+    // }  // else value is already assigned
+    std::cout << "\n gettt db.h  ";
+    // std::cout << key[0];s
+    
+    // const char * arr = new char[key.size()];
+    // const char ** pos = arr;
+    std::string temp = "";
+    std::size_t n=0;
+    for (n=0; n<key.size(); n++)
+      temp += key[n];
+      // (*arr)[n] = key[n];
+      // std::cout << key[n];
+    
+    // (*arr)[n] = '\0';
+    // std::cout << arr << " \n";
+    const char * arr = temp.c_str();
+    // MemTable mt = new MemTable();
+    // std::cout << GetAlex(arr, column_family, options);
+    // value = 'value';
+    // auto s = Status::OK();
     return s;
   }
   virtual Status Get(const ReadOptions& options,

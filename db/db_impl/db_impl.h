@@ -176,6 +176,7 @@ class Directories {
 // divided in several db_impl_*.cc files, besides db_impl.cc.
 class DBImpl : public DB {
  public:
+//  std::string GetAlex(const char * k, ColumnFamilyHandle* column_family, const ReadOptions& read_options);
   DBImpl(const DBOptions& options, const std::string& dbname,
          const bool seq_per_batch = false, const bool batch_per_txn = true,
          bool read_only = false);
@@ -234,6 +235,7 @@ class DBImpl : public DB {
   virtual Status Get(const ReadOptions& options,
                      ColumnFamilyHandle* column_family, const Slice& key,
                      PinnableSlice* value, std::string* timestamp) override;
+  // std::string GetAlex(const char * k, GetImplOptions& get_impl_options);
 
   using DB::GetEntity;
   Status GetEntity(const ReadOptions& options,

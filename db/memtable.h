@@ -280,6 +280,8 @@ class MemTable {
                callback, is_blob_index, do_merge);
   }
 
+  std::string GetAlex(const char * k);
+
   // @param immutable_memtable Whether this memtable is immutable. Used
   // internally by NewRangeTombstoneIterator(). See comment above
   // NewRangeTombstoneIterator() for more detail.
@@ -552,6 +554,8 @@ class MemTable {
   std::unique_ptr<MemTableRep> table_;
   std::unique_ptr<MemTableRep> range_del_table_;
   std::atomic_bool is_range_del_table_empty_;
+
+  // std::string GetAlex(const char k);
 
   // Total data size of all data inserted
   std::atomic<uint64_t> data_size_;
