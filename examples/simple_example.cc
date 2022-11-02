@@ -37,12 +37,13 @@ int main() {
   Status s = DB::Open(options, kDBPath, &db);
   assert(s.ok());
 
+  std::cout << "opened";
   // Put key-value
-  s = db->Put(WriteOptions(), "key1", "value");
+  s = db->Put(WriteOptions(), "key", "value");
   assert(s.ok());
   std::string value;
   // get value
-  s = db->Get(ReadOptions(), "key1", &value);
+  s = db->Get(ReadOptions(), "key", &value);
   assert(s.ok());
   assert(value == "value");
 

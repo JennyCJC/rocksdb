@@ -685,6 +685,14 @@ void MemTable::UpdateEntryChecksum(const ProtectionInfoKVOS64* kv_prot_info,
   }
 }
 
+std::string MemTable::GetAlex(const char* k){
+  // std::unique_ptr<MemTableRep>& table =
+  //     type == kTypeRangeDeletion ? range_del_table_ : table_;
+  return table_->GetAlex(k);
+  // std::cout << "memtable.cc\n";
+  // return "";
+}
+
 Status MemTable::Add(SequenceNumber s, ValueType type,
                      const Slice& key, /* user key */
                      const Slice& value,
@@ -745,6 +753,7 @@ Status MemTable::Add(SequenceNumber s, ValueType type,
       }
     } else {
       // bool res = table->InsertKey(handle);
+      std::cout << "\n" << "memtable handle" <<key.data();
       bool res = table->InsertKeyAlex(key.data(), value.data());
       if (UNLIKELY(!res)) {
         return Status::TryAgain("key+seq exists");
@@ -1066,7 +1075,7 @@ bool MemTable::Get(const LookupKey& key, std::string* value,
                    SequenceNumber* max_covering_tombstone_seq,
                    SequenceNumber* seq, const ReadOptions& read_opts,
                    bool immutable_memtable, ReadCallback* callback,
-                   bool* is_blob_index, bool do_merge) {
+                   bool* is_blob_index, bool do_merge) {    
   // The sequence number is updated synchronously in version_set.h
   if (IsEmpty()) {
     // Avoiding recording stats for speed.
@@ -1445,6 +1454,12 @@ void MemTableRep::Get(const LookupKey& k, void* callback_args,
        iter->Next()) {
   }
 }
+
+// std::string MemTableRep::GetAlex(const char* k){
+//   std::unique_ptr<MemTableRep>& table =
+//       type == kTypeRangeDeletion ? range_del_table_ : table_;
+//   return table->GetAlex(k);
+// }
 
 void MemTable::RefLogContainingPrepSection(uint64_t log) {
   assert(log > 0);

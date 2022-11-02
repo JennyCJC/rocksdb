@@ -14,12 +14,13 @@
 #include "rocksdb/utilities/options_type.h"
 #include "util/string_util.h"
 #include "../ALEX/src/core/alex.h"
+// #include "hash-library/sha256.h"
 
 namespace ROCKSDB_NAMESPACE {
 namespace {
 class SkipListRep : public MemTableRep {
   alex::Alex<int, char*> index;
-  std::hash<const char*> ptr_hash;
+  std::hash<std::string> ptr_hash;
   InlineSkipList<const MemTableRep::KeyComparator&> skip_list_;
   const MemTableRep::KeyComparator& cmp_;
   const SliceTransform* transform_;
@@ -53,12 +54,20 @@ public:
  }
 
  bool InsertKeyAlex(const char* key, const char* value) override {
+  //  std::cout << "\n" << "Key Check" << key << "\n";
   //  skip_list_.Insert(static_cast<char*>(handle));
-   int hash = ptr_hash(key);
+   std::string s = key;
+   s.erase(strlen(key) - strlen(value)-1);
+   int hash = ptr_hash(s);
    index.insert(hash, (char*)value);
    auto iter = index.find(hash);
    std::cout << iter.payload();
-   std::cout << "Success";
+   std::cout << "\n" << s.length();
+   std::cout << "\n" << s;
+   for (int i=0; i<s.length(); i++)
+    std::cout << (int)s[i];
+   std::cout << "\n" << hash;
+   std::cout << "\n InsertKeyAlex Success";
   //  std::cout << static_cast<char*>(handle);
   //  return index.insert(key, value);.second;
    return true;
@@ -104,6 +113,34 @@ public:
    // All memory is allocated through allocator; nothing to report here
    return 0;
  }
+
+ std::string GetAlex(const char* k) {
+    SkipListRep::Iterator iter(&skip_list_);
+   std::cout << "Get reached ";
+
+  //  *callback_args->value = index.find(ptr_hash(k.memtable_key().data())).payload();
+  //  callback_func(callback_args, iter.key());
+  std::string s = k;
+   int hash = ptr_hash(s);
+   std::cout << "\n" << s.length();
+   std::cout << "\n" << s;
+   for (int i=0; i<s.length(); i++)
+    std::cout << (int)s[i];
+  std::cout  << "\n" << hash;
+  auto iterAlex = index.find(hash);
+  //  std::cout << iterAlex;
+  if (iterAlex == index.end()){
+    std::cout << "key not found";
+  }
+  else{
+    std::cout << "\nvalue found: " << iterAlex.payload();
+  }
+   std::cout << "\n GetAlex Success";
+  //  std::string res = index.find(ptr_hash(k)).payload();
+  //  std::cout << res;
+          // return res;
+          return iterAlex.payload();
+          }
 
  void Get(const LookupKey& k, void* callback_args,
           bool (*callback_func)(void* arg, const char* entry)) override {
