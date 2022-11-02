@@ -2392,8 +2392,11 @@ std::string temp = "";
   res = sv->mem->GetAlex(arr);
   std::cout << "db_impl" << res;
   // assigned size still has problems
+  // assign value to buffer
   get_impl_options.value->GetSelf()->assign(res, 0);
   return Status::OK();
+
+
   if (!skip_memtable) {
     // Get value associated with key
     if (get_impl_options.get_value) {

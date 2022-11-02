@@ -111,8 +111,7 @@ class MemTableRep {
     return true;
   }
 
-  virtual std::string GetAlex(const char* k)
-  {
+  virtual std::string GetAlex(const char* k){
     return "";
   }
 

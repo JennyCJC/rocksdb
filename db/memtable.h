@@ -555,6 +555,8 @@ class MemTable {
   std::unique_ptr<MemTableRep> range_del_table_;
   std::atomic_bool is_range_del_table_empty_;
 
+  // std::string GetAlex(const char k);
+
   // Total data size of all data inserted
   std::atomic<uint64_t> data_size_;
   std::atomic<uint64_t> num_entries_;
