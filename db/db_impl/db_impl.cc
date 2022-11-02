@@ -2394,6 +2394,7 @@ std::string temp = "";
   // assigned size still has problems
   // assign value to buffer
   get_impl_options.value->GetSelf()->assign(res, 0);
+  get_impl_options.value->PinSelf();
   return Status::OK();
 
 
