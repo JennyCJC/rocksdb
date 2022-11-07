@@ -57,7 +57,6 @@ struct DBOptions;
 using KeyHandle = void*;
 
 extern Slice GetLengthPrefixedSlice(const char* data);
-// std::string GetAlex(const char* k);
 class MemTableRep {
  public:
   // KeyComparator provides a means to compare keys, which are internal keys
@@ -111,8 +110,8 @@ class MemTableRep {
     return true;
   }
 
-  virtual std::string GetAlex(const char* k){
-    return "";
+  virtual bool GetAlex(const char* k, std::string* value){
+    return true;
   }
 
   // Same as Insert(), but in additional pass a hint to insert location for

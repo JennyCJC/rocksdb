@@ -685,10 +685,10 @@ void MemTable::UpdateEntryChecksum(const ProtectionInfoKVOS64* kv_prot_info,
   }
 }
 
-std::string MemTable::GetAlex(const char* k){
+bool MemTable::GetAlex(const char* k, std::string* value){
   // std::unique_ptr<MemTableRep>& table =
   //     type == kTypeRangeDeletion ? range_del_table_ : table_;
-  return table_->GetAlex(k);
+  return table_->GetAlex(k, value);
   // std::cout << "memtable.cc\n";
   // return "";
 }

@@ -1,13 +1,17 @@
 Makefile:174: Warning: Compiling in debug mode. Don't use the resulting binary in production
+/usr/bin/ld: tools/db_bench_tool.o: in function `rocksdb::CompressData(rocksdb::Slice const&, rocksdb::CompressionInfo const&, unsigned int, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >*)':
+/data/jennycao/rocksdb_clone2/./util/compression.h:1574: undefined reference to `rocksdb::SyncPoint::GetInstance()'
+/usr/bin/ld: tools/db_bench_tool.o: in function `void rocksdb::SyncPoint::Process<35ul>(char const (&) [35ul], void*)':
+/data/jennycao/rocksdb_clone2/./test_util/sync_point.h:130: undefined reference to `rocksdb::SyncPoint::Process(rocksdb::Slice const&, void*)'
+/usr/bin/ld: tools/db_bench_tool.o:(.data.rel.ro._ZTIN7rocksdb22FileChecksumGenFactoryE[_ZTIN7rocksdb22FileChecksumGenFactoryE]+0x10): undefined reference to `typeinfo for rocksdb::Customizable'
+/usr/bin/ld: tools/db_bench_tool.o:(.data.rel.ro._ZTIN7rocksdb13EventListenerE[_ZTIN7rocksdb13EventListenerE]+0x10): undefined reference to `typeinfo for rocksdb::Customizable'
+/usr/bin/ld: tools/db_bench_tool.o:(.data.rel.ro._ZTIN7rocksdb16CompactionFilterE[_ZTIN7rocksdb16CompactionFilterE]+0x10): undefined reference to `typeinfo for rocksdb::Customizable'
+/usr/bin/ld: tools/simulated_hybrid_file_system.o:(.data.rel.ro._ZTIN7rocksdb25SimulatedHybridFileSystemE[_ZTIN7rocksdb25SimulatedHybridFileSystemE]+0x10): undefined reference to `typeinfo for rocksdb::FileSystemWrapper'
+/usr/bin/ld: test_util/testutil.o:(.data.rel.ro._ZTIN7rocksdb18MemTableRepFactoryE[_ZTIN7rocksdb18MemTableRepFactoryE]+0x10): undefined reference to `typeinfo for rocksdb::Customizable'
+/usr/bin/ld: test_util/testutil.o:(.data.rel.ro._ZTIN7rocksdb10ComparatorE[_ZTIN7rocksdb10ComparatorE]+0x18): undefined reference to `typeinfo for rocksdb::Customizable'
+/usr/bin/ld: test_util/testutil.o:(.data.rel.ro._ZTIN7rocksdb23CompactionFilterFactoryE[_ZTIN7rocksdb23CompactionFilterFactoryE]+0x10): undefined reference to `typeinfo for rocksdb::Customizable'
 /usr/bin/ld: test_util/testutil.o:(.data.rel.ro._ZTIN7rocksdb4test22ChanglingMergeOperatorE[_ZTIN7rocksdb4test22ChanglingMergeOperatorE]+0x10): undefined reference to `typeinfo for rocksdb::MergeOperator'
-/usr/bin/ld: ./librocksdb_debug.a(db_impl_open.o): in function `rocksdb::DBImpl::Open(rocksdb::DBOptions const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::vector<rocksdb::ColumnFamilyDescriptor, std::allocator<rocksdb::ColumnFamilyDescriptor> > const&, std::vector<rocksdb::ColumnFamilyHandle*, std::allocator<rocksdb::ColumnFamilyHandle*> >*, rocksdb::DB**, bool, bool)':
-/data/jennycao/rocksdb_clone2/db/db_impl/db_impl_open.cc:2063: undefined reference to `rocksdb::DBImpl::TEST_WALBufferIsEmpty(bool)'
-/usr/bin/ld: ./librocksdb_debug.a(write_batch.o):(.data.rel.ro._ZTIN7rocksdb10WriteBatchE[_ZTIN7rocksdb10WriteBatchE]+0x10): undefined reference to `typeinfo for rocksdb::WriteBatchBase'
-/usr/bin/ld: ./librocksdb_debug.a(stringappend.o):(.data.rel.ro._ZTIN7rocksdb20StringAppendOperatorE[_ZTIN7rocksdb20StringAppendOperatorE]+0x10): undefined reference to `typeinfo for rocksdb::AssociativeMergeOperator'
-/usr/bin/ld: ./librocksdb_debug.a(stringappend2.o):(.data.rel.ro._ZTIN7rocksdb24StringAppendTESTOperatorE[_ZTIN7rocksdb24StringAppendTESTOperatorE]+0x10): undefined reference to `typeinfo for rocksdb::MergeOperator'
-/usr/bin/ld: ./librocksdb_debug.a(block_cache_tier.o):(.data.rel.ro._ZTIN7rocksdb14BlockCacheTierE[_ZTIN7rocksdb14BlockCacheTierE]+0x10): undefined reference to `typeinfo for rocksdb::PersistentCacheTier'
-/usr/bin/ld: ./librocksdb_debug.a(write_batch_with_index.o):(.data.rel.ro._ZTIN7rocksdb19WriteBatchWithIndexE[_ZTIN7rocksdb19WriteBatchWithIndexE]+0x10): undefined reference to `typeinfo for rocksdb::WriteBatchBase'
-/usr/bin/ld: ./librocksdb_debug.a(uint64add.o):(.data.rel.ro+0x10): undefined reference to `typeinfo for rocksdb::AssociativeMergeOperator'
-/usr/bin/ld: ./librocksdb_debug.a(bytesxor.o):(.data.rel.ro._ZTIN7rocksdb16BytesXOROperatorE[_ZTIN7rocksdb16BytesXOROperatorE]+0x10): undefined reference to `typeinfo for rocksdb::AssociativeMergeOperator'
+/usr/bin/ld: test_util/testutil.o:(.data.rel.ro._ZTIN7rocksdb15MockSystemClockE[_ZTIN7rocksdb15MockSystemClockE]+0x10): undefined reference to `typeinfo for rocksdb::SystemClockWrapper'
+/usr/bin/ld: test_util/testutil.o:(.data.rel.ro+0x28): undefined reference to `typeinfo for rocksdb::MemTableRep'
 collect2: error: ld returned 1 exit status
 make: *** [Makefile:1259: db_bench] Error 1

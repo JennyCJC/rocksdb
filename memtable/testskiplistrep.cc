@@ -114,7 +114,7 @@ public:
    return 0;
  }
 
- std::string GetAlex(const char* k) {
+ bool GetAlex(const char* k, std::string* value) {
     SkipListRep::Iterator iter(&skip_list_);
    std::cout << "Get reached ";
 
@@ -131,6 +131,7 @@ public:
   //  std::cout << iterAlex;
   if (iterAlex == index.end()){
     std::cout << "key not found";
+    return false;
   }
   else{
     std::cout << "\nvalue found: " << iterAlex.payload();
@@ -139,7 +140,9 @@ public:
   //  std::string res = index.find(ptr_hash(k)).payload();
   //  std::cout << res;
           // return res;
-          return iterAlex.payload();
+          // return iterAlex.payload();
+          *value = iterAlex.payload();
+          return true;
           }
 
  void Get(const LookupKey& k, void* callback_args,

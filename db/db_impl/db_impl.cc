@@ -2389,13 +2389,20 @@ std::string temp = "";
 
 
   std::string res;
-  res = sv->mem->GetAlex(arr);
-  std::cout << "db_impl" << res;
+  bool isFound;
+  isFound = sv->mem->GetAlex(arr, &res);
+  // std::cout << "db_impl" << res;
   // assigned size still has problems
   // assign value to buffer
-  get_impl_options.value->GetSelf()->assign(res, 0);
-  get_impl_options.value->PinSelf();
-  return Status::OK();
+  
+  if (isFound){
+    get_impl_options.value->GetSelf()->assign(res, 0);
+    get_impl_options.value->PinSelf();
+    return Status::OK();
+  }
+  else{
+    return Status::NotFound("Requested sequence not yet written in the db");
+  }
 
 
   if (!skip_memtable) {
