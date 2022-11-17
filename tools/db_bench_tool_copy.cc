@@ -451,16 +451,16 @@ DEFINE_int32(max_write_buffer_number,
              "The number of in-memory memtables. Each memtable is of size"
              " write_buffer_size bytes.");
 
-// DEFINE_int32(min_write_buffer_number_to_merge,
-//              ROCKSDB_NAMESPACE::Options().min_write_buffer_number_to_merge,
-//              "The minimum number of write buffers that will be merged together"
-//              "before writing to storage. This is cheap because it is an"
-//              "in-memory merge. If this feature is not enabled, then all these"
-//              "write buffers are flushed to L0 as separate files and this "
-//              "increases read amplification because a get request has to check"
-//              " in all of these files. Also, an in-memory merge may result in"
-//              " writing less data to storage if there are duplicate records "
-//              " in each of these individual write buffers.");
+DEFINE_int32(min_write_buffer_number_to_merge,
+             ROCKSDB_NAMESPACE::Options().min_write_buffer_number_to_merge,
+             "The minimum number of write buffers that will be merged together"
+             "before writing to storage. This is cheap because it is an"
+             "in-memory merge. If this feature is not enabled, then all these"
+             "write buffers are flushed to L0 as separate files and this "
+             "increases read amplification because a get request has to check"
+             " in all of these files. Also, an in-memory merge may result in"
+             " writing less data to storage if there are duplicate records "
+             " in each of these individual write buffers.");
 
 DEFINE_int32(max_write_buffer_number_to_maintain,
              ROCKSDB_NAMESPACE::Options().max_write_buffer_number_to_maintain,
@@ -3537,12 +3537,26 @@ class Benchmark {
         method = &Benchmark::ReadWhileScanning;
       } else if (name == "readrandomwriterandom") {
         method = &Benchmark::ReadRandomWriteRandom;
+      } else if (name == "readrandommergerandom") {
+        if (FLAGS_merge_operator.empty()) {
+          fprintf(stdout, "%-12s : skipped (--merge_operator is unknown)\n",
+                  name.c_str());
+          ErrorExit();
+        }
+        method = &Benchmark::ReadRandomMergeRandom;
       } else if (name == "updaterandom") {
         method = &Benchmark::UpdateRandom;
       } else if (name == "xorupdaterandom") {
         method = &Benchmark::XORUpdateRandom;
       } else if (name == "appendrandom") {
         method = &Benchmark::AppendRandom;
+      } else if (name == "mergerandom") {
+        if (FLAGS_merge_operator.empty()) {
+          fprintf(stdout, "%-12s : skipped (--merge_operator is unknown)\n",
+                  name.c_str());
+          exit(1);
+        }
+        method = &Benchmark::MergeRandom;
       } else if (name == "randomwithverify") {
         method = &Benchmark::RandomWithVerify;
       } else if (name == "fillseekseq") {
@@ -3624,6 +3638,14 @@ class Benchmark {
         }
         method = &Benchmark::Replay;
 #endif  // ROCKSDB_LITE
+      } else if (name == "getmergeoperands") {
+        method = &Benchmark::GetMergeOperands;
+#ifndef ROCKSDB_LITE
+      } else if (name == "verifychecksum") {
+        method = &Benchmark::VerifyChecksum;
+      } else if (name == "verifyfilechecksums") {
+        method = &Benchmark::VerifyFileChecksums;
+#endif                             // ROCKSDB_LITE
       } else if (name == "readrandomoperands") {
         read_operands_ = true;
         method = &Benchmark::ReadRandom;
@@ -4124,8 +4146,8 @@ class Benchmark {
     options.arena_block_size = FLAGS_arena_block_size;
     options.write_buffer_size = FLAGS_write_buffer_size;
     options.max_write_buffer_number = FLAGS_max_write_buffer_number;
-    // options.min_write_buffer_number_to_merge =
-    //   FLAGS_min_write_buffer_number_to_merge;
+    options.min_write_buffer_number_to_merge =
+      FLAGS_min_write_buffer_number_to_merge;
     options.max_write_buffer_number_to_maintain =
         FLAGS_max_write_buffer_number_to_maintain;
     options.max_write_buffer_size_to_maintain =
@@ -6032,7 +6054,29 @@ class Benchmark {
       } else {
         cfh = db_with_cfh->db->DefaultColumnFamily();
       }
+      if (read_operands_) {
+        GetMergeOperandsOptions get_merge_operands_options;
+        get_merge_operands_options.expected_max_number_of_operands =
+            static_cast<int>(pinnable_vals.size());
+        int number_of_operands;
+        s = db_with_cfh->db->GetMergeOperands(
+            options, cfh, key, pinnable_vals.data(),
+            &get_merge_operands_options, &number_of_operands);
+        if (s.IsIncomplete()) {
+          // Should only happen a few times when we encounter a key that had
+          // more merge operands than any key seen so far. Production use case
+          // would typically retry in such event to get all the operands so do
+          // that here.
+          pinnable_vals.resize(number_of_operands);
+          get_merge_operands_options.expected_max_number_of_operands =
+              static_cast<int>(pinnable_vals.size());
+          s = db_with_cfh->db->GetMergeOperands(
+              options, cfh, key, pinnable_vals.data(),
+              &get_merge_operands_options, &number_of_operands);
+        }
+      } else {
         s = db_with_cfh->db->Get(options, cfh, key, &pinnable_val, ts_ptr);
+      }
 
       if (s.ok()) {
         found++;
@@ -7503,6 +7547,112 @@ class Benchmark {
     thread->stats.AddMessage(msg);
   }
 
+  // Read-modify-write for random keys (using MergeOperator)
+  // The merge operator to use should be defined by FLAGS_merge_operator
+  // Adjust FLAGS_value_size so that the keys are reasonable for this operator
+  // Assumes that the merge operator is non-null (i.e.: is well-defined)
+  //
+  // For example, use FLAGS_merge_operator="uint64add" and FLAGS_value_size=8
+  // to simulate random additions over 64-bit integers using merge.
+  //
+  // The number of merges on the same key can be controlled by adjusting
+  // FLAGS_merge_keys.
+  void MergeRandom(ThreadState* thread) {
+    RandomGenerator gen;
+    int64_t bytes = 0;
+    std::unique_ptr<const char[]> key_guard;
+    Slice key = AllocateKey(&key_guard);
+    // The number of iterations is the larger of read_ or write_
+    Duration duration(FLAGS_duration, readwrites_);
+    while (!duration.Done(1)) {
+      DBWithColumnFamilies* db_with_cfh = SelectDBWithCfh(thread);
+      int64_t key_rand = thread->rand.Next() % merge_keys_;
+      GenerateKeyFromInt(key_rand, merge_keys_, &key);
+
+      Status s;
+      Slice val = gen.Generate();
+      if (FLAGS_num_column_families > 1) {
+        s = db_with_cfh->db->Merge(write_options_,
+                                   db_with_cfh->GetCfh(key_rand), key,
+                                   val);
+      } else {
+        s = db_with_cfh->db->Merge(write_options_,
+                                   db_with_cfh->db->DefaultColumnFamily(), key,
+                                   val);
+      }
+
+      if (!s.ok()) {
+        fprintf(stderr, "merge error: %s\n", s.ToString().c_str());
+        exit(1);
+      }
+      bytes += key.size() + val.size();
+      thread->stats.FinishedOps(nullptr, db_with_cfh->db, 1, kMerge);
+    }
+
+    // Print some statistics
+    char msg[100];
+    snprintf(msg, sizeof(msg), "( updates:%" PRIu64 ")", readwrites_);
+    thread->stats.AddBytes(bytes);
+    thread->stats.AddMessage(msg);
+  }
+
+  // Read and merge random keys. The amount of reads and merges are controlled
+  // by adjusting FLAGS_num and FLAGS_mergereadpercent. The number of distinct
+  // keys (and thus also the number of reads and merges on the same key) can be
+  // adjusted with FLAGS_merge_keys.
+  //
+  // As with MergeRandom, the merge operator to use should be defined by
+  // FLAGS_merge_operator.
+  void ReadRandomMergeRandom(ThreadState* thread) {
+    RandomGenerator gen;
+    std::string value;
+    int64_t num_hits = 0;
+    int64_t num_gets = 0;
+    int64_t num_merges = 0;
+    size_t max_length = 0;
+
+    std::unique_ptr<const char[]> key_guard;
+    Slice key = AllocateKey(&key_guard);
+    // the number of iterations is the larger of read_ or write_
+    Duration duration(FLAGS_duration, readwrites_);
+    while (!duration.Done(1)) {
+      DB* db = SelectDB(thread);
+      GenerateKeyFromInt(thread->rand.Next() % merge_keys_, merge_keys_, &key);
+
+      bool do_merge = int(thread->rand.Next() % 100) < FLAGS_mergereadpercent;
+
+      if (do_merge) {
+        Status s = db->Merge(write_options_, key, gen.Generate());
+        if (!s.ok()) {
+          fprintf(stderr, "merge error: %s\n", s.ToString().c_str());
+          exit(1);
+        }
+        num_merges++;
+        thread->stats.FinishedOps(nullptr, db, 1, kMerge);
+      } else {
+        Status s = db->Get(read_options_, key, &value);
+        if (value.length() > max_length)
+          max_length = value.length();
+
+        if (!s.ok() && !s.IsNotFound()) {
+          fprintf(stderr, "get error: %s\n", s.ToString().c_str());
+          // we continue after error rather than exiting so that we can
+          // find more errors if any
+        } else if (!s.IsNotFound()) {
+          num_hits++;
+        }
+        num_gets++;
+        thread->stats.FinishedOps(nullptr, db, 1, kRead);
+      }
+    }
+
+    char msg[100];
+    snprintf(msg, sizeof(msg),
+             "(reads:%" PRIu64 " merges:%" PRIu64 " total:%" PRIu64
+             " hits:%" PRIu64 " maxlength:%" ROCKSDB_PRIszt ")",
+             num_gets, num_merges, readwrites_, num_hits, max_length);
+    thread->stats.AddMessage(msg);
+  }
 
   void WriteSeqSeekSeq(ThreadState* thread) {
     writes_ = FLAGS_num;
@@ -7560,7 +7710,114 @@ class Benchmark {
     }
   }
 
+  // Does a bunch of merge operations for a key(key1) where the merge operand
+  // is a sorted list. Next performance comparison is done between doing a Get
+  // for key1 followed by searching for another key(key2) in the large sorted
+  // list vs calling GetMergeOperands for key1 and then searching for the key2
+  // in all the sorted sub-lists. Later case is expected to be a lot faster.
+  void GetMergeOperands(ThreadState* thread) {
+    DB* db = SelectDB(thread);
+    const int kTotalValues = 100000;
+    const int kListSize = 100;
+    std::string key = "my_key";
+    std::string value;
+
+    for (int i = 1; i < kTotalValues; i++) {
+      if (i % kListSize == 0) {
+        // Remove trailing ','
+        value.pop_back();
+        db->Merge(WriteOptions(), key, value);
+        value.clear();
+      } else {
+        value.append(std::to_string(i)).append(",");
+      }
+    }
+
+    SortList s;
+    std::vector<int> data;
+    // This value can be experimented with and it will demonstrate the
+    // perf difference between doing a Get and searching for lookup_key in the
+    // resultant large sorted list vs doing GetMergeOperands and searching
+    // for lookup_key within this resultant sorted sub-lists.
+    int lookup_key = 1;
+
+    // Get API call
+    std::cout << "--- Get API call --- \n";
+    PinnableSlice p_slice;
+    uint64_t st = FLAGS_env->NowNanos();
+    db->Get(ReadOptions(), db->DefaultColumnFamily(), key, &p_slice);
+    s.MakeVector(data, p_slice);
+    bool found =
+        binary_search(data, 0, static_cast<int>(data.size() - 1), lookup_key);
+    std::cout << "Found key? " << std::to_string(found) << "\n";
+    uint64_t sp = FLAGS_env->NowNanos();
+    std::cout << "Get: " << (sp - st) / 1000000000.0 << " seconds\n";
+    std::string* dat_ = p_slice.GetSelf();
+    std::cout << "Sample data from Get API call: " << dat_->substr(0, 10)
+              << "\n";
+    data.clear();
+
+    // GetMergeOperands API call
+    std::cout << "--- GetMergeOperands API --- \n";
+    std::vector<PinnableSlice> a_slice((kTotalValues / kListSize) + 1);
+    st = FLAGS_env->NowNanos();
+    int number_of_operands = 0;
+    GetMergeOperandsOptions get_merge_operands_options;
+    get_merge_operands_options.expected_max_number_of_operands =
+        (kTotalValues / 100) + 1;
+    db->GetMergeOperands(ReadOptions(), db->DefaultColumnFamily(), key,
+                         a_slice.data(), &get_merge_operands_options,
+                         &number_of_operands);
+    for (PinnableSlice& psl : a_slice) {
+      s.MakeVector(data, psl);
+      found =
+          binary_search(data, 0, static_cast<int>(data.size() - 1), lookup_key);
+      data.clear();
+      if (found) break;
+    }
+    std::cout << "Found key? " << std::to_string(found) << "\n";
+    sp = FLAGS_env->NowNanos();
+    std::cout << "Get Merge operands: " << (sp - st) / 1000000000.0
+              << " seconds \n";
+    int to_print = 0;
+    std::cout << "Sample data from GetMergeOperands API call: ";
+    for (PinnableSlice& psl : a_slice) {
+      std::cout << "List: " << to_print << " : " << *psl.GetSelf() << "\n";
+      if (to_print++ > 2) break;
+    }
+  }
+
 #ifndef ROCKSDB_LITE
+  void VerifyChecksum(ThreadState* thread) {
+    DB* db = SelectDB(thread);
+    ReadOptions ro;
+    ro.adaptive_readahead = FLAGS_adaptive_readahead;
+    ro.async_io = FLAGS_async_io;
+    ro.rate_limiter_priority =
+        FLAGS_rate_limit_user_ops ? Env::IO_USER : Env::IO_TOTAL;
+    ro.readahead_size = FLAGS_readahead_size;
+    Status s = db->VerifyChecksum(ro);
+    if (!s.ok()) {
+      fprintf(stderr, "VerifyChecksum() failed: %s\n", s.ToString().c_str());
+      exit(1);
+    }
+  }
+
+  void VerifyFileChecksums(ThreadState* thread) {
+    DB* db = SelectDB(thread);
+    ReadOptions ro;
+    ro.adaptive_readahead = FLAGS_adaptive_readahead;
+    ro.async_io = FLAGS_async_io;
+    ro.rate_limiter_priority =
+        FLAGS_rate_limit_user_ops ? Env::IO_USER : Env::IO_TOTAL;
+    ro.readahead_size = FLAGS_readahead_size;
+    Status s = db->VerifyFileChecksums(ro);
+    if (!s.ok()) {
+      fprintf(stderr, "VerifyFileChecksums() failed: %s\n",
+              s.ToString().c_str());
+      exit(1);
+    }
+  }
 
   // This benchmark stress tests Transactions.  For a given --duration (or
   // total number of --writes, a Transaction will perform a read-modify-write
